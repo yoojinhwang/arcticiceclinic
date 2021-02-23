@@ -3,13 +3,17 @@ Dp = 65e-6; % meters
 rp = Dp/2;
 A = pi*rp^2;
 %rhop = 125; %kg/m^3, 1250 is too large
-%mp = 4/3*rp^3*pi*rhop;
+mp = 4/3*rp^3*pi*rhop;
 htanker = 24.5; %meters
 rhof = 1.225; %kg/m^3
+
 vFan = 12.94; %m/s, when cfm = 50000 and d = 60in
 Fblower = A*rhof*vFan^2;
-vblower = 10; %Fblower/mp; %the initial velocity of the particle, given vFan
-%vwind = 10; %meters
+
+vblower = 10;   %Fblower/mp; 
+                %the initial velocity of the particle, given vFan
+
+%vwind = 10;    %m/s
 %Re = vwind*Dp*rhof/1.68e-5;
 Cd = 0.659692;
 g = 9.81;

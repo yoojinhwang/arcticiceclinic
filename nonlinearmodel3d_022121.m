@@ -29,10 +29,9 @@ vblower = 10; %Fblower/mp; %the initial velocity of the particle, given vFan
 %Other
 Cd = 0.659692;
 g = 9.81;
-time = linspace(0,100,100000);
 
 %Number of Particles (iterations)
-numParticles = 1;          
+numParticles = 10;          
 
 %Create Output Vectors
 xFin = zeros(numParticles,1);
@@ -102,44 +101,44 @@ for i = 1:numParticles
  %Find the index for when particles reach ground.
     [~,groundIndex] = min(abs(zPosition));
  
- %{
+ %
  %^^Put a { here to pause state plotting
  
     figure(1)
     subplot(2,1,1)
-    plot(time(1:groundIndex), zVelocity(1:groundIndex));
+    plot(t(1:groundIndex), zVelocity(1:groundIndex));
     hold on
     title('z velocity + position')
     xlabel('time')
     ylabel('z-direction velocity')
     subplot(2,1,2)
-    plot(time(1:groundIndex), zPosition(1:groundIndex));
+    plot(t(1:groundIndex), zPosition(1:groundIndex));
     hold on
     xlabel('time')
     ylabel('z-direction position')
     
     figure(2)
     subplot(2,1,1)
-    plot(time(1:groundIndex), xVelocity(1:groundIndex));
+    plot(t(1:groundIndex), xVelocity(1:groundIndex));
     hold on
-    title('x velocitty + position')
+    title('x velocity + position')
     xlabel('time')
     ylabel('x-direction velocity')
     subplot(2,1,2)
-    plot(time(1:groundIndex), xPosition(1:groundIndex));
+    plot(t(1:groundIndex), xPosition(1:groundIndex));
     hold on
     xlabel('time')
     ylabel('x-direction position')
 
     figure(3)
     subplot(2,1,1)
-    plot(time(1:groundIndex), yVelocity(1:groundIndex));
+    plot(t(1:groundIndex), yVelocity(1:groundIndex));
     hold on
     title('y velocity + position')
     xlabel('time')
     ylabel('y-direction velocity')
     subplot(2,1,2)
-    plot(time(1:groundIndex), yPosition(1:groundIndex));
+    plot(t(1:groundIndex), yPosition(1:groundIndex));
     hold on
     xlabel('time')
     ylabel('y-direction position')
@@ -165,7 +164,6 @@ xFin(i) = xPosition(groundIndex);
 yFin(i) = yPosition(groundIndex);
 
 
-
 end
 
 
@@ -175,6 +173,31 @@ scatter(xFin,yFin)
 title('Scatter plot of HGM final location')
 xlabel('x distance')
 ylabel('y distance')
+
+%Turn off all the holds on the plots
+figure(1)
+subplot(2,1,1)
+hold off
+subplot(2,1,2)
+hold off
+
+figure(2)
+subplot(2,1,1)
+hold off
+subplot(2,1,2)
+hold off
+
+figure(3)
+subplot(2,1,1)
+hold off
+subplot(2,1,2)
+hold off
+
+figure(4)
+hold off
+
+figure(6)
+hold off
 
 %patch([xPosition(1:groundIndex) nan],[yPosition(1:groundIndex) nan],[zPosition(1:groundIndex) nan],[zPosition(1:groundIndex) nan],'EdgeColor','interp','FaceColor','none')
 

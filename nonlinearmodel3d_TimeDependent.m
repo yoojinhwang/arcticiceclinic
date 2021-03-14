@@ -1,4 +1,13 @@
 startTime = tic; %start timer
+
+%Number of Particles (iterations)
+numParticles = 5;    
+
+%Time Dependend Wind Variables
+global windChangeCounter wind
+global WindSpeedTracker; %For debugging or if you want to know what wind values were used
+TimeDep = 0; %Triggers time dependence      
+
 %%Define constants
 %Wind speed
 Vwind_mean = 10;                %m/s
@@ -32,20 +41,13 @@ Cd = 0.659692;
 g = 9.81;
 %time = linspace(0,100,100000);
 
-%Time Dependend Wind Variables
- global windChangeCounter wind
- global WindSpeedTracker; %For debugging or if you want to know what wind values were used
-% tprev = 0;
-
-%Number of Particles (iterations)
-numParticles = 1;          
-
 %Create Output Vectors
 xFin = zeros(numParticles,1);
 yFin = zeros(numParticles,1);
 
 %Timing for debug
 times = zeros(1,numParticles);
+
 
 for i = 1:numParticles
     %%Create Random Parameters
@@ -99,7 +101,7 @@ for i = 1:numParticles
     
 %Solving for v of particle v' = .....
     windChangeCounter = 0; %Ensures wind changes just ONCE per time interval
-    [t,y] = ode23(@(t,x)createState(t,x,parameters),[0,100],x0,options);
+    [t,y] = ode23(@(t,x)createState(t,x,parameters,TimeDep),[0,100],x0,options);
     %UPDATE: Since wind varies, it is no longer an input and instead a
     %global variable
     xPosition = y(:,1);
@@ -215,7 +217,7 @@ toc(startTime) %Elapsed time from start of script
 %patch([xPosition(1:groundIndex) nan],[yPosition(1:groundIndex) nan],[zPosition(1:groundIndex) nan],[zPosition(1:groundIndex) nan],'EdgeColor','interp','FaceColor','none')
 
 %function dx = createState(t,x,param)
-function dx = createState(t,x,param)
+function dx = createState(t,x,param,TimeDep)
     %Creates the state vector containing info:
     %[Vx,Vy,Vz,ax,ay,az] from the input x = [xpos,ypos,zpos,Vx,Vy,Vz]
     Cd = param(1);
@@ -240,12 +242,14 @@ function dx = createState(t,x,param)
     %otherwise you just get random noise.  Implemented by calling timeWind
     %every 'modDenom' seconds
     global windChangeCounter WindSpeedTracker
-    modDenom = 2; %1/frequency of wind speed change
-    floorTime=floor(t);
-    if ~mod(floorTime,modDenom) && ~ismember(floorTime,windChangeCounter) %mod(floorTime, modDenom) = 0 whever floor time is evenly divisible by modDenom
-        wind = timeWind(wind,modDenom);
-        windChangeCounter = [windChangeCounter,floorTime]; %Adds the current time to the windChangeCounter to ensure that the next time (which will probably be floored to the same integer) does not call timeWind again
-        WindSpeedTracker = [WindSpeedTracker;wind];
+    if TimeDep
+        modDenom = 2; %1/frequency of wind speed change
+        floorTime=floor(t);
+        if ~mod(floorTime,modDenom) && ~ismember(floorTime,windChangeCounter) %mod(floorTime, modDenom) = 0 whever floor time is evenly divisible by modDenom
+            wind = timeWind(wind,modDenom);
+            windChangeCounter = [windChangeCounter,floorTime]; %Adds the current time to the windChangeCounter to ensure that the next time (which will probably be floored to the same integer) does not call timeWind again
+            WindSpeedTracker = [WindSpeedTracker;wind];
+        end
     end
     vwindX = wind(1); %Not a particularly neccesary step
     vwindY = wind(2);

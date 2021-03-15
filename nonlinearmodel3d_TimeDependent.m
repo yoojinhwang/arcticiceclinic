@@ -1,12 +1,12 @@
 startTime = tic; %start timer
 
 %Number of Particles (iterations)
-numParticles = 5;    
+numParticles = 100;    
 
 %Time Dependend Wind Variables
 global windChangeCounter wind
 global WindSpeedTracker; %For debugging or if you want to know what wind values were used
-TimeDep = 0; %Triggers time dependence      
+TimeDep = 1; %Triggers time dependence (1 on, 0 off)     
 
 %%Define constants
 %Wind speed
@@ -46,12 +46,12 @@ xFin = zeros(numParticles,1);
 yFin = zeros(numParticles,1);
 
 %Timing for debug
-times = zeros(1,numParticles);
+times = zeros(numParticles,1);
 
 
 for i = 1:numParticles
     %%Create Random Parameters
-    tic
+    runitime=tic;
     %Random Wind
     %vblower = random('Normal', 20,5);
     vwind = random('Normal', Vwind_mean,Vwind_standarddev);
@@ -114,7 +114,7 @@ for i = 1:numParticles
  %Find the index for when particles reach ground.
     [~,groundIndex] = min(abs(zPosition));
  
- %
+ %{
  %^^Put a { here to pause state plotting
  
     figure(1)
@@ -176,8 +176,9 @@ for i = 1:numParticles
 xFin(i) = xPosition(groundIndex);
 yFin(i) = yPosition(groundIndex);
 
-times(i) = toc;
+times(i) = toc(runitime);
 
+fprintf('particle %u, elapsed time %.2f, vwindx = %.2f, xFin = %.2f \n', i,times(i),wind(1),xFin(i))
 end
 
 

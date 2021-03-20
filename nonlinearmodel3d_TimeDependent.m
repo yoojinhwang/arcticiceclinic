@@ -6,7 +6,7 @@ numParticles = 100;
 %Time Dependend Wind Variables
 global windChangeCounter wind
 global WindSpeedTracker; %For debugging or if you want to know what wind values were used
-TimeDep = 1; %Triggers time dependence (1 on, 0 off)     
+TimeDep = 0; %Triggers time dependence (1 on, 0 off)     
 
 %%Define constants
 %Wind speed
@@ -44,7 +44,10 @@ g = 9.81;
 %Create Output Vectors
 xFin = zeros(numParticles,1);
 yFin = zeros(numParticles,1);
-
+Ds = zeros(numParticles,1);
+rhos = zeros(numParticles,1);
+initWindX = zeros(numParticles,1);
+initWindY = zeros(numParticles,1);
 %Timing for debug
 times = zeros(numParticles,1);
 
@@ -59,6 +62,8 @@ for i = 1:numParticles
     wind(1) = vwind*cos(thetaWind); %vwindX
     wind(2) = vwind*sin(thetaWind); %vwindY
     WindSpeedTracker = wind; 
+    initWindX(i) = wind(1);
+    initWindY(i) = wind(2);
     %Removed the assignment of Vwindx and Vwindy since they're irrelevant and are just folded into the wind variable anyways
     
     %Random Diameter
@@ -175,7 +180,9 @@ for i = 1:numParticles
 %Add to output vector to generate Scatter Plot
 xFin(i) = xPosition(groundIndex);
 yFin(i) = yPosition(groundIndex);
-
+%Other Data collection
+Ds(i) = Dp;
+rhos(i) = rhop;
 times(i) = toc(runitime);
 
 fprintf('particle %u, elapsed time %.2f, vwindx = %.2f, xFin = %.2f \n', i,times(i),wind(1),xFin(i))

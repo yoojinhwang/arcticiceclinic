@@ -10,7 +10,10 @@
 %needed
 
 %Example Function Call 
-%[xFinClean,yFinClean,timesClean]=removeFailure([67,70,71,87],[xFin,yFin,times']);
+%fails = [1,9,28,36,75,79,85,95];
+%[xFinClean,yFinClean,initWindXClean,initWindYClean,DsClean,rhosClean,timesClean]=removeFailure(fails,[xFin,yFin,initWindX,initWindY,Ds,rhos,times]);
+%save('nTD_3_20.mat','xFin','yFin','initWindX','initWindY','Ds','rhos','times','xFinClean','yFinClean','initWindXClean','initWindYClean','DsClean','rhosClean','timesClean','fails')
+
 %Particles data is printed to the command window while code is running, use
 %this to identify which particles failed.
 %NOTE: Error will appear before the failed particle so for case:

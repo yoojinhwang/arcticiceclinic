@@ -19,7 +19,17 @@ thetaWind_standarddev = pi/24;
 
 %Particle Diameter
 Dp_mean = 65e-6;                %meters
-Dp_standarddev = 39e-6;
+Dp_90 = 115e-6;
+Dp_10 = 30e-6;
+Dp_max = 120e-6;
+Dp_min = 10e-6;
+Z_90 = 1.28155; %Z score for 90th (and 10th) percentile
+Dp_standarddevU = (Dp_90-Dp_mean)/Z_90;
+Dp_standarddevL = (Dp_mean-Dp_10)/Z_90;
+ZDmax = (Dp_max-Dp_mean)/Dp_standarddevU;
+ZDmin = (Dp_min-Dp_mean)/Dp_standarddevL;
+
+%Dp_standarddev = 39e-6;
 
 %Particle Density
 rhop_mean = 0.125*1000;         %kg/m^3
@@ -67,7 +77,18 @@ for i = 1:numParticles
     %Removed the assignment of Vwindx and Vwindy since they're irrelevant and are just folded into the wind variable anyways
     
     %Random Diameter
-    Dp = random('Normal', Dp_mean, Dp_standarddev);
+    DpOK=0;
+    Dpsign = randi(2)*2-3; %randomly gives -1 or 1 
+    while DpOK ~=1    
+        Dpstd = Dpsign*abs(random('Normal', 0, 1));
+        if Dpsign==1 && Dpstd<ZDmax
+            Dp=Dp_mean+Dp_standarddevU*Dpstd;
+            DpOK=1;
+        elseif Dpsign==-1 && Dpstd>ZDmin
+            Dp=Dp_mean+Dp_standarddevL*Dpstd;
+            DpOK=1;
+        end
+    end
     rp = Dp/2;
     A = pi*rp^2;
     Vp = 4/3*pi*rp^3;

@@ -31,7 +31,7 @@ Cd = 0.659692;
 g = 9.81;
 
 %Number of Particles (iterations)
-numParticles = 10;
+numParticles = 1;
 
 %Create Output Vectors
 xFin = zeros(numParticles,1);
@@ -202,16 +202,14 @@ c1x = 1/(vwindX - initVx);
 c2x = initX - 1/a*(vwindX*c1x - log(c1x));
 x_analytical = 1/a*(vwindX*(a*t_z0 + c1x) - log(a*t_z0 + c1x)) + c2x;
 
-if vwindY >= 0             %The form of the y-equation changes depending on if vwindY is pos or neg
+if vwindY >= 0;             %The form of the y-equation changes depending on if vwindY is pos or neg
     c1y =  1/(vwindY - initVy);
     c2y = initY - 1/a*(vwindY*c1y - log(c1y));
     y_analytical = 1/a*(vwindY*(a*t_z0 + c1y) - log(a*t_z0 + c1y)) + c2y;
 else
     c1y = 1/(vwindY*sqrt(2))*atanh((vwindY - initVy)/(vwindY*sqrt(2)));
     c2y = initY + 1/a*log(cosh(vwindY*sqrt(2)*c1y));
-    y_analytical = c2y + vwindY*t_z0 - 1/a*((vwindY*sqrt(2)*c1y) - 0.693);
-    %actually its, c2y + vwindY*t_z0 - 1/a*log(cosh(vwindY*sqrt(2)*c1y) but the
-    %log(cosh()) term is too long, so we approximate it.
+    y_analytical = c2y + vwindY*t_z0 - 
 end
 
 
@@ -309,8 +307,8 @@ function dx = createState(t,x,param, wind)
     
     %Define Acceleration Components
     %These are essentially the DEs we're solving
-    ax = (-Cd*A*rhof*Vx*abs(Vx)/(2*mp) + Cd*A*rhof*vwindX*Vx + Cd*A*rhof*vwindX*abs(vwindX)/(2*mp));
-    ay = (-Cd*A*rhof*Vy*abs(Vy)/(2*mp) + Cd*A*rhof*vwindY*Vy + Cd*A*rhof*vwindY*abs(vwindY)/(2*mp));
+    ax = (-Cd*A*rhof*Vx*abs(Vx)/(2*mp) + A*rhof*vwindX*abs(vwindX)/mp);
+    ay = (-Cd*A*rhof*Vy*abs(Vy)/(2*mp) + A*rhof*vwindY*abs(vwindY)/mp);
     az = (-Cd*A*rhof*Vz*abs(Vz)/(2*mp) - g + Fblower/mp);
     
     %Pack derivatives into vector for ODE solver

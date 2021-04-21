@@ -1,4 +1,4 @@
-function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
+function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChange)
     %numParticles: Number of iterations/particles
     %TimeDep: Triggers time dependence (1 on, 0 off)
     %modDenom: Only relevant in TD models, frequency of wind change in
@@ -12,8 +12,7 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
     startTime = tic; %start timer
     
     %Time Dependend Wind Variables
-    global windChangeCounter wind
-    global WindSpeedTracker; %For debugging or if you want to know what wind values were used
+    global windChangeCounter wind WindSpeedTracker
 
     %%Define constants
     %Wind speed
@@ -46,13 +45,15 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
     %Re = vwind*Dp*rhof/1.68e-5;
 
     %Other
-    Cd = 2.6;%0.659692;
+    Cd = 0.659692; %2.6;
     g = 9.81;
-    %time = linspace(0,100,100000);
+    failedCount=0;
 
     %Create Output Vectors
     xFin = zeros(numParticles,1);
     yFin = zeros(numParticles,1);
+    zFin = zeros(numParticles,1);
+    tFin = zeros(numParticles,1);
     Ds = zeros(numParticles,1);
     rhos = zeros(numParticles,1);
     mps = zeros(numParticles,1);
@@ -117,14 +118,21 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
         initVy = 0;
         initVz = vblower;
         x0 = [initX; initY; initZ; initVx; initVy; initVz];
-
+        
+        %Set how many seconds the ODE's are solved to.  Increase if particles aren't hitting the ground
+        %Based on testing, critical ODE time limit is almost entirely determined by particle diameter, with smaller particles requiring more time
+        if Dp>50e-6
+            ODETimeLim = 100;
+        else
+            ODETimeLim = 200;
+        end
 
         %Adjustment to ode solver to prevent squiggles, increases comp time
         options = odeset('RelTol',1e-5,'AbsTol',1e-7); 
 
         %Solving for v of particle v' = .....
         windChangeCounter = 0; %Ensures wind changes just once per time interval
-        [t,y] = ode23(@(t,x)createState(t,x,parameters,TimeDep),[0,100],x0,options);
+        [t,y] = ode23(@(t,x)createState(t,x,parameters,TimeDep),[0,ODETimeLim],x0,options);
         xPosition = y(:,1);
         yPosition = y(:,2);
         zPosition = y(:,3);
@@ -133,8 +141,11 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
         zVelocity = y(:,6);
 
         %Find the index for when particles reach ground.
-        [~,groundIndex] = min(abs(zPosition));
-
+        [minZ,groundIndex] = min(abs(zPosition));
+        if minZ>0.5 %This is an estimation, not an actual count
+            fprintf('Error: Particle may not have hit ground, Zpos = %.2f \n',minZ)
+            failedCount = failedCount+1;
+        end
         %{
         %^^Put a { here to pause state plotting
 
@@ -192,16 +203,22 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
         zlabel('z distance')
         hold on
         %}
-
-        %Add to output vector to generate Scatter Plot
+        figure(7)
+        plot(t(1:groundIndex), xVelocity(1:groundIndex));
+        title('X Velocity over time')
+        xlabel('time (s)')
+        ylabel('X Velocity (m/s)')
+        
+        %Output Data Collection
         xFin(i) = xPosition(groundIndex);
         yFin(i) = yPosition(groundIndex);
-        %Other Data collection
+        zFin(i) = zPosition(groundIndex); %Useful for debuging, should be all zeros.  If there are nonzero values, increase the ammount of time the ODE solver runs for (this will slow the program down)
+        tFin(i) = t(groundIndex);
         Ds(i) = Dp;
         rhos(i) = rhop;
         mps(i) = mp;
-        times(i) = toc(runitime);
-        AvgWindX(i) = mean(WindSpeedTracker(:,1));
+        times(i) = toc(runitime); %Debugging or runtime metadata
+        AvgWindX(i) = mean(WindSpeedTracker(:,1)); %For non time dependent cases, WindSpeedTracker is a 1,2 vector
         AvgWindY(i) = mean(WindSpeedTracker(:,2));
         if TimeDep ~= 0
             thetas = atan2d(WindSpeedTracker(:,2),WindSpeedTracker(:,1));
@@ -209,25 +226,26 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
             Mags = sqrt(WindSpeedTracker(:,2).^2+WindSpeedTracker(:,1).^2);
             AvgMag(i) = mean(Mags);
         end
-    
-        fprintf('particle %u, elapsed time %.2f, xFin = %.2f, yFin = %.2f \n', i,times(i),xFin(i),yFin(i))
+        %Print data about most recent run to command window, can eliminate for speed
+        fprintf('particle %u, elapsed time %.2f, xFin = %.2f, yFin = %.2f, flight time = %.2f \n', i,times(i),xFin(i),yFin(i),tFin(i))
     end
     
-    %Format Data to table
+    %Format Output Data to Table
     if TimeDep == 0
-        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,times,xFin,yFin);
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,tFin,times,xFin,yFin,zFin);
     else
-        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,times,xFin,yFin);
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,tFin,times,xFin,yFin,zFin);
     end
     
     %Final Scatter Plot
     figure(5)
     scatter(xFin,yFin)
-    title('Scatter plot of HGM final location')
-    xlabel('x distance')
-    ylabel('y distance')
-
+    xlabel('X Position (m)')
+    ylabel('Y Position (m)')
+    title('Scatterplot of Final HGM Positions')
+    fprintf('%d Particles modeled with %d failures \n',numParticles,failedCount)
     %Turn off all the holds on the plots.
+    %
     figure(1)
     subplot(2,1,1)
     hold off
@@ -251,7 +269,8 @@ function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
 
     figure(6)
     hold off
-
+    %}
+    
     toc(startTime) %Elapsed time from start of script
     %patch([xPosition(1:groundIndex) nan],[yPosition(1:groundIndex) nan],[zPosition(1:groundIndex) nan],[zPosition(1:groundIndex) nan],'EdgeColor','interp','FaceColor','none')
 

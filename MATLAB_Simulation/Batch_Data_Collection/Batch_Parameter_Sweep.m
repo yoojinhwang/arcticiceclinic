@@ -21,7 +21,7 @@ for i = 1:length(Freqs)
         StdXs(i,j) = std(OutData.xFin);
         MeanYs(i,j) = mean(OutData.yFin); 
         StdYs(i,j) = std(OutData.yFin);
-        fails(i,j) = OutData.failedCount;
+        fails(i,j) = OutData.failedCounts;
     end
 end
 

@@ -126,7 +126,6 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
         else
             ODETimeLim = 300;
         end
-
         %Adjustment to ode solver to prevent squiggles, increases comp time
         options = odeset('RelTol',1e-5,'AbsTol',1e-7); 
 
@@ -237,10 +236,12 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
     end
     
     %Format Output Data to Table
+    failedCounts = zeros(numParticles,1);
+    failedCounts(1) = failedCount; %variables need to be same length, just look at first index for data
     if TimeDep == 0
-        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,tFin,failedCount,times,xFin,yFin,zFin);
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,tFin,failedCounts,times,xFin,yFin,zFin);
     else
-        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,tFin,failedCount,times,xFin,yFin,zFin);
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,tFin,failedCounts,times,xFin,yFin,zFin);
     end
     
     %Final Scatter Plot

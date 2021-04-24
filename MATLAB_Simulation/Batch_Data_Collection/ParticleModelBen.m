@@ -61,7 +61,6 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
     AvgWindY = zeros(numParticles,1);
     AvgTheta = zeros(numParticles,1);
     AvgMag = zeros(numParticles,1);
-    
     %Timing for debug
     times = zeros(numParticles,1);
 
@@ -123,9 +122,9 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
         %Set how many seconds the ODE's are solved to.  Increase if particles aren't hitting the ground
         %Based on testing, critical ODE time limit is almost entirely determined by particle diameter, with smaller particles requiring more time
         if Dp>50e-6
-            ODETimeLim = 100;
+            ODETimeLim = 200; %should bo 100, 200
         else
-            ODETimeLim = 200;
+            ODETimeLim = 300;
         end
 
         %Adjustment to ode solver to prevent squiggles, increases comp time
@@ -239,9 +238,9 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
     
     %Format Output Data to Table
     if TimeDep == 0
-        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,tFin,times,xFin,yFin,zFin);
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,tFin,failedCount,times,xFin,yFin,zFin);
     else
-        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,tFin,times,xFin,yFin,zFin);
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,tFin,failedCount,times,xFin,yFin,zFin);
     end
     
     %Final Scatter Plot

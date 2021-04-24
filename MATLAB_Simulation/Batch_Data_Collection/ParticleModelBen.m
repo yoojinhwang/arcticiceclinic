@@ -45,7 +45,7 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
     %Re = vwind*Dp*rhof/1.68e-5;
 
     %Other
-    Cd = 0.659692; %2.6;
+    Cd = 0.659692; %2.6; FURTHER WORK: Vary CD with reynolds number (pretty well behaved eqn for spheres)
     g = 9.81;
     failedCount=0;
 
@@ -108,7 +108,8 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
         parameters(5) = g;
         parameters(6) = rBlower;
         parameters(7) = FBlower;
-
+        parameters(8) = modDenom;
+        parameters(9) = stdevWindChange;
 
         %Create Vector of Initial Values
         initX = 0;
@@ -142,10 +143,19 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
 
         %Find the index for when particles reach ground.
         [minZ,groundIndex] = min(abs(zPosition));
-        if minZ>0.5 %This is an estimation, not an actual count
+        %Check to see if they actually hit the ground or just ran out of
+        %time
+        %FURTHER WORK: Find average z velocity of particles in order to
+        %determine how many meters of error are possible for a given
+        %failure height (eg, asuume vx = 10 m/s, find time (t) it takes
+        %for a particle to fall from minZ to the ground, t*vx = final
+        %position error).  Use said limit to impelemet a acceptable error
+        %threshold instead of the arbritrary choice I made
+        if minZ>0.1 %This is an estimation, not an actual count
             fprintf('Error: Particle may not have hit ground, Zpos = %.2f \n',minZ)
             failedCount = failedCount+1;
         end
+        
         %{
         %^^Put a { here to pause state plotting
 
@@ -203,16 +213,13 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
         zlabel('z distance')
         hold on
         %}
-        figure(7)
-        plot(t(1:groundIndex), xVelocity(1:groundIndex));
-        title('X Velocity over time')
-        xlabel('time (s)')
-        ylabel('X Velocity (m/s)')
         
         %Output Data Collection
         xFin(i) = xPosition(groundIndex);
         yFin(i) = yPosition(groundIndex);
-        zFin(i) = zPosition(groundIndex); %Useful for debuging, should be all zeros.  If there are nonzero values, increase the ammount of time the ODE solver runs for (this will slow the program down)
+        zFin(i) = zPosition(groundIndex); %Useful for debuging, should be all zeros.  If there are nonzero values, increase the ammount of time the ODE solver runs for (this will slow the program down).
+        %Note, longer time periods also seem to increase ODE solve step
+        %intervals, which introduces its own inaccuracies so be careful
         tFin(i) = t(groundIndex);
         Ds(i) = Dp;
         rhos(i) = rhop;
@@ -284,7 +291,8 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
         mp = param(4);
         g = param(5);
         rBlower = param(6);
-
+        modDenom = param(8);
+        stdevWindChange = param(9);
         %While Particles are within blower radius, have a contant upward force.
         xPos = x(1);
         yPos = x(2);
@@ -301,7 +309,7 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
         if TimeDep
             floorTime=floor(t);
             if ~mod(floorTime,modDenom) && ~ismember(floorTime,windChangeCounter) %mod(floorTime, modDenom) = 0 whever floor time is evenly divisible by modDenom
-                wind = timeWind(wind,modDenom);
+                wind = timeWind(wind,modDenom,stdevWindChange);
                 windChangeCounter = [windChangeCounter,floorTime]; %Adds the current time to the windChangeCounter to ensure that the next time (which will probably be floored to the same integer) does not call timeWind again
                 WindSpeedTracker = [WindSpeedTracker;wind];
             end
@@ -337,10 +345,9 @@ function OutData = ParticleModelBen(numParticles,TimeDep,modDenom,stdevWindChang
     end
 
 
-    function  wind = timeWind(wind,modDenom)
+    function  wind = timeWind(wind,modDenom,stdevWindChange)
         %time dependent wind based on a random walk
         %Change parameters to adjust random walk
-        stdevWindChange = 0.5;
         wind(1) = wind(1) + modDenom*random('Normal', 0,stdevWindChange);
         wind(2) = wind(2) + modDenom*random('Normal', 0,stdevWindChange);
         %}

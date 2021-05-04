@@ -1,14 +1,19 @@
-function OutData = ParticleModelBen(numParticles,TimeDep,Twind,stdevWindChange,graph)
-    %numParticles: Number of iterations/particles
-    %TimeDep: Triggers time dependence (1 on, 0 off)
-    %modDenom: Only relevant in TD models, frequency of wind change in
-    %seconds.  Must be an integer
-    %stdevWindChange: Only relevant in TD models, standard deviation of
-    %random wind speed changes (gaussian distribution)
+function OutData = ParticleModelBen(numParticles,solType,Twind,stdevWindChange,graph)
+    %numParticles:  Number of iterations/particles
+    %solType:   The solution type for the model:
+    %           "ANA" -- Anaytical Solution"
+    %           "CW" -- Constant Wind Solution"
+    %           "TDW" -- Time Dependent Wind Solution"
+    %           Must be String enclosed by " " 
+    %Twind:  Only relevant in TD models, frequency of wind change in
+    %        seconds.  Must be an integer
+    %stdevWindChange:   Only relevant in TD models, standard deviation of
+    %                   random wind speed changes (gaussian distribution)
     
-    %OutData: A table of output data.  Can be configured to fit your data
-    %needs
-    
+    %
+    %OutData:   A table of output data.  Can be configured to fit your data
+    %           needs
+
     startTime = tic; %start timer
     
     %Time Dependend Wind Variables
@@ -97,7 +102,62 @@ function OutData = ParticleModelBen(numParticles,TimeDep,Twind,stdevWindChange,g
         FBlower = A*rhof*vFan^2;
         
 %%%%%%%%%%%%%%%%DOM, THIS IS WHERE THERE WOULD BE A SWITCH WHERE WE CHOOSE BETWEEN ANALYTICAL AND ODE SOLUTIONS%%%%%%%%%%%%%%%
+if solType == "ANA"
+    
+    %Analytical Solution
+    %The only outputs for this are xFin and yFin, I can also make tFin
 
+    %Initial Conditions
+        initX = 0;
+        initY = 0;
+        initZ = htanker;
+        initVx = 0;
+        initVy = 0;
+        initVz = vblower;
+    %Define wind components
+        vwindX = wind(1);
+        vwindY = wind(2);
+
+        %Coeffecients for the z equation
+        a = mp;
+        b = (Cd*A*rhof)/(2);
+        c = mp*g;
+        c1 = 1/sqrt(b*c)*atanh(-initVz*sqrt(b/c));
+        c2 = initZ + a/b*log(cosh(c1*sqrt(b*c)));
+
+        %Actual Equation:t_z0 = a/sqrt(b*c)*acosh(exp(b/a*c2)) - a*c1;
+        %Approximate: acosh(exp(x)) = x + 0.693
+        t_z0 = a/sqrt(b*c)*(b/a*c2 + 0.693) - a*c1;
+        %Accounting for initVz condition being outside the real domain of atanh
+        t_z0 = real(t_z0);  
+        tFin(i) = t_z0;
+
+        %Coefficient for x, and y equations
+        a = Cd*rhof*A/(2*mp);           
+        %x-equation for the analytical solution
+        c1x = 1/(vwindX - initVx);
+        c2x = initX - 1/a*(vwindX*c1x - log(c1x));
+        xFin(i) = 1/a*(vwindX*(a*t_z0 + c1x) - log(a*t_z0 + c1x)) + c2x;
+
+        %The form of the y-equation depends on if vwindY is positive or negative
+        if vwindY >= 0             
+            c1y =  1/(vwindY - initVy);
+            c2y = initY - 1/a*(vwindY*c1y - log(c1y));
+            yFin(i) = 1/a*(vwindY*(a*t_z0 + c1y) - log(a*t_z0 + c1y)) + c2y;
+        else
+            c1y = 1/(vwindY*sqrt(2))*atanh((vwindY - initVy)/(vwindY*sqrt(2)));
+            c2y = initY + 1/a*log(cosh(vwindY*sqrt(2)*c1y));
+            yFin(i) = c2y + vwindY*t_z0 - 1/a*((vwindY*sqrt(2)*c1y) - 0.693);
+            %Actual Equation:c2y + vwindY*t_z0 - 1/a*log(cosh(vwindY*sqrt(2)*c1y)
+            %Appriximate: acosh(exp(x)) = x + 0.693
+        end
+    %End Analytical Solution
+elseif solType == "TDW" || solType == "CW"
+        if solType == "TDW"
+            TimeDep = 1;
+        else
+            TimeDep = 0;
+        end
         %Pack parameters into vector for createState Function
         parameters = zeros(6,1);        %Adjust if you want to add more parameters
         parameters(1) = Cd;
@@ -149,6 +209,13 @@ function OutData = ParticleModelBen(numParticles,TimeDep,Twind,stdevWindChange,g
             fprintf('Warning: Final particle height outside of tolerance\n')
         end
         
+    else
+        typeSol = [ "'ANA' -- Anaytical Solution";
+                    "'CW' -- Constant Wind Solution";
+                    "'TDW' -- Time Dependent Wind Solution"];
+        fprintf('Solution Type not recognized. Please choose one of the following for SolType:\n')
+        disp(typeSol)
+end
         if graph
             figure(1)
             subplot(2,1,1)
@@ -208,17 +275,21 @@ function OutData = ParticleModelBen(numParticles,TimeDep,Twind,stdevWindChange,g
         
         
         %Output Data Collection
+        if all(solType ~= "ANA")
         xFin(i) = xPosition(groundIndex);
         yFin(i) = yPosition(groundIndex);
         zFin(i) = zPosition(groundIndex);
         tFin(i) = t(groundIndex);
+        else
+            continue
+        end
         Ds(i) = Dp;
         rhos(i) = rhop;
         mps(i) = mp;
         times(i) = toc(runitime); %Debugging or runtime metadata
         AvgWindX(i) = mean(WindSpeedTracker(:,1)); %For non time dependent cases, WindSpeedTracker is a 1,2 vector
         AvgWindY(i) = mean(WindSpeedTracker(:,2));
-        if TimeDep ~= 0
+        if TimeDep == 1
             thetas = atan2d(WindSpeedTracker(:,2),WindSpeedTracker(:,1));
             AvgTheta(i) = mean(thetas);
             Mags = sqrt(WindSpeedTracker(:,2).^2+WindSpeedTracker(:,1).^2);
@@ -229,10 +300,18 @@ function OutData = ParticleModelBen(numParticles,TimeDep,Twind,stdevWindChange,g
     end
     
     %Format Output Data to Table
-    if TimeDep == 0
+    if solType == "CW"
         OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,tFin,failed,times,xFin,yFin,zFin);
-    else
+    elseif solType == "TDW"
         OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,AvgMag,tFin,failed,times,xFin,yFin,zFin);
+    elseif solType == "ANA"
+        OutData = table(Ds,rhos,mps,AvgWindX,AvgWindY,AvgTheta,tFin,xFin,yFin);
+    else
+        typeSol = [ "'ANA' -- Anaytical Solution";
+                    "'CW' -- Constant Wind Solution";
+                    "'TDW' -- Time Dependent Wind Solution"];
+        fprintf('Solution Type not recognized. Please choose one of the following for SolType:\n')
+        disp(typeSol)
     end
     
     fprintf('%d Particles modeled with %d failures \n',numParticles,sum(failed))

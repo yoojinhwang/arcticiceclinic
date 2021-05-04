@@ -1,6 +1,6 @@
 %Parameter sweep data analysis
-load('TD_Parameter_Sweep_4_20.mat')
-load('TD_Parameter_Sweep_4_20_FrqMgs.mat')
+load('TD_Parameter_Sweep_4_24_FixedFails.mat')
+
 
 figure(1)
 clf
@@ -10,9 +10,9 @@ for i = 1:length(Mags)
     MagLegend{i} = sprintf('%.1f',Mags(i));
 end
 MagLegend{1} = sprintf('%.2f',Mags(1));
-xlabel('Freqency (Hz)')
-ylabel('Mean Final X Position')
-title('Mean Final X Position vs Wind Change Frequency')
+xlabel('Period (s)')
+ylabel('Mean Final X Position (m)')
+title('Mean Final X Position vs Wind Change Period')
 legend(MagLegend)
 hold off
 
@@ -22,9 +22,9 @@ hold on
 for i = 1:length(Mags)
     plot(Freqs,MeanYs(:,i))
 end
-xlabel('Freqency (Hz)')
-ylabel('Mean Final Y Position')
-title('Mean Final Y Position vs Wind Change Frequency')
+xlabel('Period (s)')
+ylabel('Mean Final Y Position (m)')
+title('Mean Final Y Position vs Wind Change Period')
 legend(MagLegend)
 hold off
 
@@ -34,9 +34,9 @@ hold on
 for i = 1:length(Mags)
     plot(Freqs,StdXs(:,i))
 end
-xlabel('Freqency (Hz)')
-ylabel('Stdev Final X Position')
-title('Stdev Final X Position vs Wind Change Frequency')
+xlabel('Period (s)')
+ylabel('Standard Deviation Final X Position (m)')
+title('Standard Deviation Final X Position vs Wind Change Period')
 legend(MagLegend,'Location','northwest')
 hold off
 
@@ -46,9 +46,9 @@ hold on
 for i = 1:length(Mags)
     plot(Freqs,StdYs(:,i))
 end
-xlabel('Freqency (Hz)')
-ylabel('Stdev Final Y Position')
-title('Stdev Final Y Position vs Wind Change Frequency')
+xlabel('Period (s)')
+ylabel('Standard Deviation Final Y Position (m)')
+title('Standard Deviation Final Y Position vs Wind Change Period')
 legend(MagLegend,'Location','northwest')
 hold off
 
@@ -60,7 +60,7 @@ for i = 1:length(Freqs)
     FreqLegend{i} = sprintf('%d',Freqs(i));
 end
 xlabel('Magnitude (m/s)')
-ylabel('Mean Final X Position')
+ylabel('Mean Final X Position (m)')
 title('Mean Final X Position vs Wind Change Magnitude')
 legend(FreqLegend)
 hold off
@@ -72,7 +72,7 @@ for i = 1:length(Freqs)
     plot(Mags,MeanYs(i,:))
 end
 xlabel('Magnitude (m/s)')
-ylabel('Mean Final Y Position')
+ylabel('Mean Final Y Position (m)')
 title('Mean Final Y Position vs Wind Change Magnitude')
 legend(FreqLegend)
 hold off
@@ -84,19 +84,19 @@ for i = 1:length(Freqs)
     plot(Mags,StdXs(i,:))
 end
 xlabel('Magnitude (m/s)')
-ylabel('Stdev Final X Position')
-title('Stdev Final X Position vs Wind Change Magnitude')
-legend(FreqLegend)
+ylabel('Standard Deviation Final X Position (m)')
+title('Standard Deviation Final X Position vs Wind Change Magnitude')
+legend(FreqLegend,'Location','northwest')
 hold off
 
 figure(8)
 clf
 hold on
 for i = 1:length(Freqs)
-    plot(Mags,MeanXs(i,:))
+    plot(Mags,StdYs(i,:))
 end
 xlabel('Magnitude (m/s)')
-ylabel('Stdev Final Y Position')
-title('Stdev Final Y Position vs Wind Change Magnitude')
-legend(FreqLegend)
+ylabel('Standard Deviation Final Y Position (m)')
+title('Standard Deviation Final Y Position vs Wind Change Magnitude')
+legend(FreqLegend,'Location','northwest')
 hold off

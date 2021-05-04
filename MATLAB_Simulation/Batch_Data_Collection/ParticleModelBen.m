@@ -95,8 +95,6 @@ function OutData = ParticleModelBen(numParticles,TimeDep,Twind,stdevWindChange,g
         mp = rhop*Vp;
 
         FBlower = A*rhof*vFan^2;
-        
-%%%%%%%%%%%%%%%%DOM, THIS IS WHERE THERE WOULD BE A SWITCH WHERE WE CHOOSE BETWEEN ANALYTICAL AND ODE SOLUTIONS%%%%%%%%%%%%%%%
 
         %Pack parameters into vector for createState Function
         parameters = zeros(6,1);        %Adjust if you want to add more parameters

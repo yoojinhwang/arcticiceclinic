@@ -6,6 +6,7 @@ TimeDep = 1; % 0 for non time dependent, otherwise, wind varies with time
 WindChangeFreq = 2; %frequency of wind change (s), integer
 stdevWindChange = 0.5; %Standard Deviation of wind change, float
 
+% Change the filename to the desired .mat file
 filename = 'TD_4_17_HighCDBen2.mat';% 'TD_4_14.mat'
 %Keeps you from overwriting files
 if isfile(filename)
@@ -19,7 +20,7 @@ elseif length(strsplit(filename,'.'))==1
 end
 
 
-OutData = ParticleModelBen(numParticles,TimeDep,WindChangeFreq,stdevWindChange);
+OutData = ParticleModel(numParticles,TimeDep,WindChangeFreq,stdevWindChange);
 
 save(filename,'OutData')
 

@@ -5,7 +5,7 @@ function OutData = ParticleModel(numParticles,solType,Twind,stdevWindChange,grap
     %           "CW" -- Constant Wind Solution"
     %           "TDW" -- Time Dependent Wind Solution"
     %           Must be String enclosed by " " 
-    %Twind:  Only relevant in TD models, frequency of wind change in
+    %Twind:  Only relevant in TD models, time between wind changes in
     %        seconds.  Must be an integer
     %stdevWindChange:   Only relevant in TD models, standard deviation of
     %                   random wind speed changes (gaussian distribution)

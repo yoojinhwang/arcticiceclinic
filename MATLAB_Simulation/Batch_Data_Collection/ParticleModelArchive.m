@@ -1,4 +1,4 @@
-function OutData = ParticleModel(numParticles,TimeDep,modDenom,stdevWindChange)
+function OutData = ParticleModelArchive(numParticles,TimeDep,modDenom,stdevWindChange)
     %TimeDep: Triggers time dependence (1 on, 0 off)     
     %numParticles: Number of iterations/particles
     startTime = tic; %start timer
